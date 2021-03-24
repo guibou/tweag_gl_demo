@@ -1,0 +1,8 @@
+cradle:
+  cabal:
+    - path: "./src"
+      component: "gl-sample:lib:gl-sample"
+    - path: "./tests"
+      component: "gl-sample:test:test"
+    - path: "app"
+      component: "gl-sample:exe:gl-sample"
