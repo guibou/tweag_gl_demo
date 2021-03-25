@@ -151,8 +151,8 @@ runUI render = do
 
   let loop p = do
         unlessM (GLFW.windowShouldClose win) $ do
-          p
+          _ <- p
           GLFW.swapBuffers win
           GLFW.pollEvents
-          render win loop
+          loop p
   render win loop
