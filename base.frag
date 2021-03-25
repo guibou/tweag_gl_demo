@@ -1,11 +1,11 @@
 #version 440
 
-in vec3 pos_vert;
+// layout(location=1) uniform vec3 light_pos;
+
 out vec4 color;
+
 
 void main()
 {
-    vec3 norm = normalize(cross(dFdx(pos_vert), dFdy(pos_vert)));
-
-    color = vec4(abs(norm), 1);
+    color = vec4(1, 1, 0, 1);
 }

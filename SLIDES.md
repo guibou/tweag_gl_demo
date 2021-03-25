@@ -8,13 +8,13 @@ Difference GPU / CPU
 
 - Multiples "core" (10496 on RTX 3090!)
 - Designed for SIMD (decode one instruction, schedule many executions)
-- Hardware accelerated operations
+- Hardware accelerated operations for graphics
 
 Hardware Operations
 ===================
 
-- Texture loading / decoding
-- Tesselation
+- Texture loading / decoding / filtering
+- Rasterization
 - Rope / Z buffer
 - "Raytrace" ?
 
@@ -24,11 +24,21 @@ SIMD
 - Describe simple operation
 - Schedule its application on multiples data
 
+GPU API
+=======
+
+- (Graphics) OpenGL, DirectX, Vulkan
+- (Compute) OpenCL, Cuda
+
 Graphical Pipeline
 ===================
 
 ```
-vertex (attribute) -> [Transformations] -> vertex (attribute+position) -> [Primitive assembly] -> primitive -> {Tesselation} -> fragments -> [Lighting] -> pixel color
+vertex (attribute) -> [Transformations]
+   -> vertex (attribute+position) -> [Primitive assembly]
+      -> primitive -> {Rasterization}
+        -> fragments -> [Lighting]
+          -> pixel color
 ```
 
 Objets
@@ -36,8 +46,19 @@ Objets
 
 - Buffers (with data)
 - Textures
-- VAO
 - Shader
+- VAO
+- Framebuffer
+
+```
+// Setup the object
+
+// Setup the current state
+
+// Enable a shader pipeline
+
+draw TRIANGLES 4000
+```
 
 Vertex shader
 ===============
@@ -61,27 +82,16 @@ int main()
 }
 ```
 
-Fragment Shader
-===============
+Shaders
+========
 
-- fragment with interpolated attributes -> color
+- * Vertex
+- Tesselation 1
+- Tesselation 2
+- Geometry
+- * Fragment
 
-```glsl
-in normal_vs;
+- Compute
 
-out vec3 color;
-
-uniform sample1D image;
-
-void main()
-{
-    color = texture(image, distanceFromOrigin);
-}
-```
-
-Geometry Shader
-===============
-
-I won't show an example
-
-- Assemble vertex into primitives.
+Demo / code time
+================

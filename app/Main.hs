@@ -26,7 +26,6 @@ main = do
   runUI $ \win loop -> do
     (locations, indexes) <- readAsset path
 
-    vao <- withPtr $ glCreateVertexArrays 1
     vboLocations <- withPtr $ glCreateBuffers 1
     vboIndexes <- withPtr $ glCreateBuffers 1
 
@@ -35,6 +34,7 @@ main = do
 
     prg <- createProgram [(GL_VERTEX_SHADER, "base.vert"), (GL_FRAGMENT_SHADER, "base.frag")]
 
+    vao <- withPtr $ glCreateVertexArrays 1
     glBindVertexArray vao
     glBindBuffer GL_ARRAY_BUFFER vboLocations
     glEnableVertexAttribArray 0
@@ -43,9 +43,11 @@ main = do
 
     glBindVertexArray vao
     glEnable GL_DEPTH_TEST
+    glClearColor 1 1 1 1
 
     loop $ do
       useProgram prg
+
       Just (double2Float -> t) <- GLFW.getTime
       (fromIntegral -> w, fromIntegral -> h) <- GLFW.getFramebufferSize win
 
@@ -60,7 +62,6 @@ main = do
       with (V3 (2 * cos (2 * t)) (2 * sin (2 * t)) 2) $ glUniform3fv 1 1 . castPtr
 
       glViewport 0 0 w h
-      glClearColor 1 1 1 1
       glClear (GL_COLOR_BUFFER_BIT .|. GL_DEPTH_BUFFER_BIT)
 
       glDrawElements
