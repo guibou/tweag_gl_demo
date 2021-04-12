@@ -4,5 +4,7 @@ cradle:
       component: "gl-sample:lib:gl-sample"
     - path: "./tests"
       component: "gl-sample:test:test"
-    - path: "app"
+    - path: "app/Main.hs"
       component: "gl-sample:exe:exe"
+    - path: "app/ShaderToy.hs"
+      component: "gl-sample:exe:ShaderToy"
