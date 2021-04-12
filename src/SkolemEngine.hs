@@ -27,26 +27,23 @@ import Control.Monad
   ( unless,
     when,
   )
-import Data.Foldable (for_)
+import Data.IORef
 import Data.Int (Int32)
 import Data.Traversable (for)
 import qualified Data.Vector as Vector
 import qualified Data.Vector.Storable as VectorStorable
-import Foreign
-  ( Ptr,
-    castPtr,
-  )
+import Foreign (allocaBytes)
 import Foreign.C.String
 import Foreign.Marshal (alloca)
 import Foreign.Marshal.Utils
+import Foreign.Ptr
 import Foreign.Storable
 import Graphics.GL
 import qualified Graphics.UI.GLFW as GLFW
 
 -- * shader code
 
-data Shader = Shader GLuint [(FilePath, GLuint)]
-  deriving (Show)
+data Shader = Shader GLuint [(FilePath, GLuint, IORef String)]
 
 createProgram :: [(GLenum, FilePath)] -> IO Shader
 createProgram shaders = do
@@ -58,7 +55,9 @@ createProgram shaders = do
       ( \(t, path) -> do
           s <- glCreateShader t
           glAttachShader prg s
-          pure (path, s)
+
+          ref <- newIORef ""
+          pure (path, s, ref)
       )
 
 setShaderSource :: GLuint -> String -> IO ()
@@ -72,13 +71,48 @@ setShaderSource s content = do
 
 useProgram :: Shader -> IO ()
 useProgram (Shader prg shaders) = do
-  for_ shaders $ \(path, s) -> do
+  changed <- for shaders $ \(path, s, currentContentRef) -> do
     content <- readFile path
 
-    setShaderSource s content
-    glCompileShader s
+    currentContent <- readIORef currentContentRef
+
+    if content /= currentContent
+      then do
+        putStrLn $ "Building " <> path
+        writeIORef currentContentRef content
+        setShaderSource s content
+        glCompileShader s
+
+        compileStatus <- withPtr $ glGetShaderiv s GL_COMPILE_STATUS
+
+        if compileStatus /= GL_TRUE
+          then do
+            putStrLn "Compilation error"
+            infoLogSize <- withPtr $ glGetShaderiv s GL_INFO_LOG_LENGTH
+            msg <- allocaBytes (fromIntegral infoLogSize) $ \p -> do
+              glGetShaderInfoLog s infoLogSize nullPtr p
+              peekCString p
+            unless (null msg) $ do
+              putStrLn msg
+            pure False
+          else pure True
+      else pure False
+
+  when (or changed) $ do
+    putStrLn "Linking Program"
     glLinkProgram prg
-  glUseProgram prg
+
+    linkStatus <- withPtr $ \p -> glGetProgramiv prg GL_LINK_STATUS p
+
+    when (linkStatus /= GL_TRUE) $ do
+      putStrLn "Link error"
+      infoLogSize <- withPtr $ glGetProgramiv prg GL_INFO_LOG_LENGTH
+      msg <- allocaBytes (fromIntegral infoLogSize) $ \p -> do
+        glGetProgramInfoLog prg infoLogSize nullPtr p
+        peekCString p
+      unless (null msg) $ do
+        putStrLn msg
+    glUseProgram prg
 
 -- * utils
 
