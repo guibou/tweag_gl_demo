@@ -1,4 +1,4 @@
-{ pkgs ? import ./nixpkgs.nix { } }: rec {
+{ pkgs ? import ./nixpkgs.nix { config = {}; overlays = []; } }: rec {
   inherit pkgs;
 
   # Explicit list of used files. Else there is always too much and
@@ -26,7 +26,7 @@
 
   app = (pkgs.haskell.lib.buildFromSdist ((pkgs.haskellPackages.override {
     overrides = self: super: {
-      wavefront = pkgs.haskell.lib.doJailbreak super.wavefront;
+      wavefront = pkgs.haskell.lib.unmarkBroken (pkgs.haskell.lib.doJailbreak super.wavefront);
     };
   }).callCabal2nix "gl-sample" sources { })).overrideAttrs (oldAttrs: {
     buildInputs = oldAttrs.buildInputs;
